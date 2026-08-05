@@ -13,3 +13,6 @@ past-work/
 recording.mp4
 literature.docx
 project-instructions.docx
+
+# local tooling
+push_to_github.sh
