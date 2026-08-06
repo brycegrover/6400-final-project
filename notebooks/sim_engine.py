@@ -2,13 +2,32 @@
 import time
 
 import numpy as np
-from scipy.optimize import linear_sum_assignment
 
 PREP_S = 600.0
 DROP_SERVICE_S = 120.0
 BATCH_WINDOW_S = 120.0
 MAX_WAITING_POOL = 400
 DAY_S = 86400.0
+
+
+# greedy cheapest pair matching, a computationally light heuristic in place of exact assignment
+def _greedy_match(cost):
+    n_c, n_o = cost.shape
+    flat_order = np.argsort(cost, axis=None)
+    used_c = np.zeros(n_c, dtype=bool)
+    used_o = np.zeros(n_o, dtype=bool)
+    pairs = []
+    limit = min(n_c, n_o)
+    for flat in flat_order:
+        ci, oi = divmod(int(flat), n_o)
+        if used_c[ci] or used_o[oi]:
+            continue
+        used_c[ci] = True
+        used_o[oi] = True
+        pairs.append((ci, oi))
+        if len(pairs) == limit:
+            break
+    return pairs
 
 TT_M = None
 ORD = None
@@ -85,9 +104,8 @@ def _simulate_swb(fleet, seed):
             pool = waiting[:MAX_WAITING_POOL]
             drive = TT_M[pos[:, None], pu[np.array(pool)]]
             cost = np.maximum(avail[:, None] - T, 0.0) + drive
-            r, ccol = linear_sum_assignment(cost)
             matched = set()
-            for ri, ci in zip(r, ccol):
+            for ri, ci in _greedy_match(cost):
                 o = pool[ci]
                 c = ri
                 depart = max(avail[c], T)
