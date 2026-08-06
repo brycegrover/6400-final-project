@@ -4,8 +4,6 @@ author:
   - name: Bryce Grover
   - name: Tianyu Zhao
 date: "2026-08-05"
-abstract: |
-  Urban food delivery depends on two things at once, an assignment policy that pairs orders with couriers and a road network that constrains what any policy can achieve. Most prior work optimizes the assignment side and treats the network as given. We study both sides together for Washington, DC, using the OpenStreetMap drivable network, 2,043 restaurant POIs, census tract population as a demand proxy, and observed 2024 traffic volumes. On the structural side, travel time weighted edge betweenness identifies a short list of chokepoints, led by the 3rd Street Tunnel and the Southeast Freeway, that simple metrics largely miss. Observed volume ranks edges only moderately like betweenness (Spearman 0.42) and the two measures share just 8 percent of their top one percent. Restaurants cluster strongly (Clark-Evans R of 0.32) and clustered restaurants reach demand about 16 percent faster than isolated ones. The network is robust to random closures but roughly forty times more sensitive to targeted ones. On the operational side, a discrete event simulation of 15,188 synthetic orders shows that windowed system-wide matching beats greedy dispatch by about 2 percent under courier scarcity, that a fleet near 500 couriers meets a 45 minute p95 standard against a 20.5 minute physical floor, and that capacity binds at the dinner peak near 1,500 orders per hour rather than at daily volume. Together the results suggest that the topology of a delivery network sets the ceiling that assignment policy can only approach.
 format:
   pdf:
     documentclass: article
@@ -35,94 +33,102 @@ execute:
 
 # Introduction
 
-Food delivery is now a routine part of urban life, but the logistics behind it are largely invisible to the customer. Two forces shape how long an order takes. The first is the assignment policy, meaning how the platform decides which courier serves which order. The second is the road network itself, which fixes how fast anyone can move between a restaurant and a door regardless of policy. Most research effort has gone into the first force. Less work treats the network as the binding constraint, and less still examines how the two interact in a specific city.
-
-This paper studies both forces for Washington, DC. The structural questions ask where the network breaks. We ask whether simple metrics find the choke points or whether a path based measure is needed (RQ1), which roads would give the most improvement if upgraded (RQ3), whether restaurant clustering helps or hurts delivery (RQ4), and how much worse a targeted road closure is than a random one (RQ7). The operational questions ask who delivers and how. We ask whether the network has an order volume it cannot move fast enough to meet (RQ2), which assignment method gives the fastest average delivery time (RQ5), how performance shifts during the lunch and dinner rushes (RQ6), and what the ideal number of couriers is (RQ8).
-
-The empirical strategy is deliberately simple. We assemble an evidence base from open data, answer the structural questions with robust network statistics and small counterfactual experiments, and answer the operational questions with a discrete event simulation built on a precomputed shortest path matrix. Where a simplification matters we flag it rather than model around it.
+<!-- section content: Tianyu -->
 
 # Literature Review
 
-The meal delivery routing problem was formalized by @reyes2018, who showed that the ratio of order volume to available couriers is the primary driver of service quality, a finding our fleet sweep reproduces at city scale. @joshi2022 proved the assignment problem computationally hard and made it tractable by batching orders and solving repeated matchings on the road network, which is the design our batched strategy follows in simplified form. @giraldo2024 confirmed on Colombian operational data that courier availability, demand, and location interact rather than act separately, which motivates evaluating strategies across fleet sizes rather than at a single operating point.
+<!-- section content: Tianyu -->
 
-Two recent papers extend the assignment side. @liang2024 showed that efficient order pooling can be learned from the behavior of skilled couriers, with timing and location mattering most during peak hours, and @cheng2025 showed that dispatching and idle fleet steering are best treated as one system level problem, since good performance requires keeping courier supply balanced with demand across the whole city. On the structural side, @leonardi2023 used a natural experiment in Milan to show that restaurants agglomerate deliberately because proximity to other restaurants raises business. Their result predicts the strong spatial clustering we measure in DC and motivates asking what that clustering does to delivery performance.
+# Data
 
-# Methodology
+The drivable street network for the District of Columbia was ingested from OpenStreetMap with OSMnx. Cleaning kept the largest strongly connected component, which preserves 10,027 intersections and 26,938 directed edges (1,928 km of streets) and guarantees that every location can legally reach every other. About a third of edges carry an explicit speed tag, so missing speeds were imputed from the mean tagged speed of the same highway type and every edge received a free flow travel time weight. These free flow times are a lower bound that ignores congestion, a limitation that carries into every result below.
 
-## Data and network construction
+Restaurant POIs come from OpenStreetMap amenity tags for restaurants, fast food, and cafes, 2,043 locations after removing same name duplicates within 50 m. Each POI was snapped to the network with a median snap distance of 19.4 m. As an external check on coverage, 98.3 percent of the 877 active ABCA restaurant class liquor licenses fall within 100 m of an OSM POI, which suggests the POI layer is not missing much of the sit down market. Observed 2024 average annual daily traffic from DDOT attaches to 6,109 edges (22.7 percent), the arterial skeleton the city actually monitors. Census tract population (206 tracts, 672,079 residents) joins to every network node and serves as the demand proxy, since no public delivery logs exist for DC.
 
-The drivable street network for the District of Columbia was ingested from OpenStreetMap with OSMnx. Cleaning kept the largest strongly connected component, which preserves 10,027 intersections and 26,938 directed edges (1,928 km of streets) and guarantees that every location can legally reach every other. About a third of edges carry an explicit speed tag, so missing speeds were imputed from the mean tagged speed of the same highway type and every edge received a free flow travel time weight. Restaurant POIs (2,043 after deduplication) were snapped to the network with a median snap distance of 19.4 m. As an external check, 98.3 percent of the 877 active ABCA restaurant class liquor licenses fall within 100 m of an OSM POI, which suggests the POI layer is not missing much of the sit down market. Observed 2024 average annual daily traffic from DDOT attaches to 6,109 edges, the arterial skeleton the city actually monitors.
+Demand itself is simulated on this substrate. A synthetic day of 15,188 orders arrives as a nonhomogeneous Poisson process with lunch and dinner peak multipliers of 3.5 and 4.5, producing 31.7 percent of orders in the lunch window and 41.8 percent in the dinner window with a peak hour of 2,279 orders at 19:00. Pickups draw uniformly from the restaurant POIs and dropoff probabilities are proportional to node level population density, following the ready time and demand treatment in @reyes2018. Each order carries its unassisted shortest path drive time, with mean 8.26 minutes, which is the floor no assignment policy can beat.
 
-## Demand proxy and order generation
+# Exploratory Data Analysis
 
-No public delivery logs exist for DC, so demand is simulated. Census tract population (206 tracts, 672,079 residents) joins to every network node, and dropoff probabilities are proportional to node level population density. A synthetic day of 15,188 orders arrives as a nonhomogeneous Poisson process with lunch and dinner peak multipliers of 3.5 and 4.5, producing 31.7 percent of orders in the lunch window and 41.8 percent in the dinner window with a peak hour of 2,279 orders at 19:00. Pickups draw uniformly from the restaurant POIs. Each order carries its unassisted shortest path drive time, with mean 8.26 minutes, which is the floor no assignment policy can beat.
+The cleaned network behaves like the planned grid it is. Intersections average 3.29 streets per node and an average degree of 5.37, most nodes connect three or four streets, and dead ends are comparatively rare. From a routing point of view this is a forgiving topology, because a courier blocked on one segment usually has an immediate parallel alternative, and the question the structural analysis takes up is where that redundancy runs out.
 
-## Structural measures and experiments
+![Restaurant POIs by type and density.](outputs/03_restaurant_distribution.png){#fig-poidist width=95%}
 
-Bottlenecks are measured with travel time weighted edge betweenness centrality approximated over 150 sampled sources, compared against observed AADT and edge speed as simple alternatives. Renovation and closure effects are measured with small counterfactuals on a common origin destination sample of 320 restaurant to demand pairs, upgrading the highest betweenness slow surface edges (seven under the current threshold) or removing the ten highest betweenness edges, each against random controls of three trials.
+As we can see from the plot above, the restaurant supply is anything but uniform. Full service restaurants dominate the count, and the density panel shows sharp concentrations downtown and along the 14th Street, U Street, H Street, and Georgetown corridors. Large areas east of the Anacostia River and in the residential northeast carry only scattered supply.
 
-## Discrete event simulation
+![Demand proxy (population density) against restaurant supply.](outputs/05_demand_heatmap.png){#fig-demand width=85%}
 
-The operational questions use a discrete event simulation over the synthetic day, with the all pairs shortest path travel time matrix precomputed in memory so that every routing query is an array lookup. Orders become ready ten minutes after placement following the ready time treatment of @reyes2018, and dropoffs take two minutes. Two assignment strategies share one commitment rule and differ only in scope. Nearest Available Courier dispatches each order at arrival to the courier who can reach the restaurant soonest. System-wide Batching accumulates orders for 120 second windows and matches the full fleet to waiting orders with a greedy cheapest pair heuristic, a computationally light stand in for the exact matching of @joshi2022 and @liang2024. Five fleet sizes between 100 and 800 couriers were swept in parallel. Couriers do not reposition while idle and orders are not bundled, both simplifications that @cheng2025 and @liang2024 respectively show can be relaxed with profit.
+As we can see from the plot above, the supply and the demand proxy do not live in the same places. The ten most restaurant dense tracts hold 37.2 percent of all restaurants but only 4.1 percent of the population, and the tract level correlation between population and restaurant count is effectively zero at -0.09. Delivery in DC is therefore structurally a transport problem, because the food is made downtown and in the northwest corridors while much of the demand sleeps elsewhere.
 
-# Structural Results
+![Free flow drive time from the restaurant core.](outputs/07_courier_reach.png){#fig-reach width=85%}
 
-## RQ1: where the network breaks
+As we can see from the plot above, free flow reach from the 14th Street core is generous. About 23 percent of intersections are reachable within five minutes, 68 percent within ten, and effectively the whole District within fifteen. The catch is that these are free flow times built from imputed speeds, so peak congestion and service overheads will compress this picture, and the gradient runs against the demand map since the areas beyond the ten minute band are exactly the population dense areas east of the river.
+
+# RQ1: Bottleneck Detection
+
+## Methodology
+
+The bottleneck question asks whether simple metrics find the choke points or whether a more robust method is needed. We compute travel time weighted edge betweenness centrality, approximated over 150 sampled sources, which estimates the share of shortest paths that cross each edge. @joshi2022 rely on the same intuition when they precompute shortest path structure for assignment in dynamic road networks. The betweenness ranking is then compared against observed AADT load and against edge speed, the two simple alternatives a practitioner might reach for first, using Spearman rank correlation and the overlap between top one percent sets.
+
+## Results
 
 ![Observed 2024 traffic volume (AADT) on the DC network.](outputs/06_traffic_aadt.png){#fig-aadt width=85%}
 
-As we can see from the plot above, observed traffic volume concentrates on the freeway spine, the river bridges, and a small set of surface arterials. Volume alone, however, is not structure. Betweenness centrality ranks edges by the share of shortest paths that must cross them, and the two measures agree only partially. The Spearman rank correlation between betweenness and observed AADT is 0.42 on monitored edges, and 0.58 between betweenness and free flow speed, yet the top one percent of edges by AADT and by betweenness overlap by just 8 percent.
+As we can see from the plot above, observed traffic volume concentrates on the freeway spine, the river bridges, and a small set of surface arterials. Volume alone, however, is not structure. The Spearman rank correlation between betweenness and observed AADT is 0.42 on monitored edges, and 0.58 between betweenness and free flow speed, yet the top one percent of edges by AADT and by betweenness overlap by just 8 percent.
 
 ![Top one percent of edges by travel time weighted betweenness.](outputs/08_bottleneck_edges.png){#fig-bottlenecks width=85%}
 
 As we can see from the plot above, the betweenness ranking concentrates on a short list of crossings led by the 3rd Street Tunnel and the Southeast Freeway, with Florida Avenue the leading surface street. These are the true chokepoints in the sense that shortest paths have no good way around them. The answer to RQ1 is that simple metrics are useful corroboration but would miss most of the structural chokepoints, so the path based measure is needed.
 
-## RQ4: restaurant clustering
+# RQ2: Demand Ceiling
 
-DC restaurants cluster far more tightly than chance would produce. The mean nearest neighbor spacing is 47 m against an expected 147 m under complete spatial randomness, a Clark-Evans ratio of 0.32, consistent with the deliberate agglomeration documented in Milan by @leonardi2023. The delivery relevant question is what clustering does to access. Restaurants inside clusters reach a common population weighted demand sample in 8.29 minutes on average against 9.88 minutes for isolated restaurants, an advantage of about 16 percent.
+## Methodology
 
-![Free flow drive time from the restaurant core.](outputs/07_courier_reach.png){#fig-reach width=85%}
+The demand ceiling question asks whether there is an order volume the network simply cannot move fast enough to meet. We answer it with throughput arithmetic on the simulation substrate. The mean busy cycle per delivery, measured in uncongested reference runs, converts into a sustainable per courier hourly throughput, and comparing that capacity against the observed arrival profile of the synthetic day locates the rate at which a given fleet saturates.
 
-As we can see from the plot above, the clusters sit precisely where network reach is best, with most of the city within ten free flow minutes of the 14th Street core. On static accessibility, clustering helps delivery rather than hurting it. What this comparison cannot capture is peak congestion inside clusters and the batching economics that @liang2024 show matter most during rushes, so we treat the operational half of RQ4 as open.
+## Results
 
-## RQ3: renovation targets
+An uncongested courier completes about 2.9 orders per hour given the 20.5 minute busy cycle, so holding the 2,279 order 19:00 peak without queue growth would require roughly 780 couriers. A 500 courier fleet, the size that meets the daily service standard in the operational analysis below, caps out near 1,461 orders per hour and survives the rush only because the peak is brief enough for its transient backlog to drain afterward. Daily volume is comfortably within capacity, since that same fleet could move about 35,000 orders in a flat day against the 15,188 simulated. The answer to RQ2 is that the ceiling is an instantaneous rate constraint rather than a volume constraint, near 1,500 orders per hour at fleet 500, and it binds at dinner.
+
+# RQ3: Renovation Targets
+
+## Methodology
+
+The renovation question asks which roads give the most improvement if upgraded. We run a simple counterfactual on a common origin destination sample of 320 restaurant to demand pairs. The highest betweenness surface edges with speeds below 40 kph, seven edges under the current threshold, are raised to a 48 kph arterial standard, travel times are recomputed, and the change in mean OD travel time is measured. Three upgrades of equally many random slow edges serve as the control.
+
+## Results
 
 ![Improvement in mean OD travel time from the targeted upgrade.](outputs/09_renovation_experiment.png){#fig-renovation width=70%}
 
-As we can see from the plot above, upgrading the seven highest betweenness slow surface edges, which land on Florida Avenue NW and New Jersey Avenue NW, improves mean origin destination travel time by about 0.09 percent, while an equal sized random upgrade is indistinguishable from zero. Targeting by betweenness therefore works, but no handful of edge fixes meaningfully changes citywide delivery times, because the slow portion of a delivery is the residential last leg rather than any single arterial segment. Renovation budgets should follow the betweenness ranking with expectations set at corridor scale.
+As we can see from the plot above, the targeted upgrade lands on Florida Avenue NW and New Jersey Avenue NW and improves mean origin destination travel time by about 0.09 percent, while an equal sized random upgrade is indistinguishable from zero. Targeting by betweenness therefore works, but no handful of edge fixes meaningfully changes citywide delivery times, because the slow portion of a delivery is the residential last leg rather than any single arterial segment. Renovation budgets should follow the betweenness ranking with expectations set at corridor scale.
 
-## RQ7: robustness to closures
+# RQ4: Restaurant Clustering
 
-![Increase in mean OD travel time from closing ten edges.](outputs/10_closure_robustness.png){#fig-closure width=70%}
+## Methodology
 
-As we can see from the plot above, closing the ten highest betweenness edges raises mean travel time by 1.3 percent while random closures average near 0.03 percent with a maximum of 0.05, a roughly forty to one asymmetry. No origin destination pair became unreachable in any scenario, which reflects the redundancy of the L'Enfant grid. The grid absorbs almost any random insult, but a small set of crossings carries disproportionate load and warrants treatment as critical infrastructure.
+The clustering question has two halves. The first asks whether DC restaurants cluster more than chance would produce, which we measure with nearest neighbor distances against a uniform random baseline inside the DC boundary and summarize with the Clark-Evans ratio. The second asks whether locating inside a cluster helps or hurts access to demand. We compare restaurants with at least ten neighbors within 250 m against effectively isolated restaurants, measuring mean network travel time from each group to the same population weighted demand sample.
 
-# Operational Results
+## Results
 
-## Demand generation
+![Restaurant clustering against a uniform random baseline.](outputs/04_restaurant_clustering.png){#fig-clustering width=85%}
 
-![Simulated delivery demand over 24 hours.](outputs/11_order_temporal_distribution.png){#fig-demand width=95%}
+As we can see from the plot above, the observed nearest neighbor distances sit far to the left of the uniform baseline. The mean observed spacing is 47 m against an expected 147 m under complete spatial randomness, a Clark-Evans ratio of 0.32, consistent with the deliberate agglomeration documented in Milan by @leonardi2023. On the access half, restaurants inside clusters reach the common demand sample in 8.29 minutes on average against 9.88 minutes for isolated restaurants, an advantage of about 16 percent. Clusters sit where the street network is fastest to everywhere else, so on static accessibility clustering helps delivery rather than hurting it. What this comparison cannot capture is peak congestion inside clusters and the batching economics that @liang2024 show matter most during rushes, so we treat the operational half of RQ4 as open for the assignment analysis below.
 
-As we can see from the plot above, the simulated day has the twin peak profile that the meal delivery literature treats as the defining operational challenge [@reyes2018]. The 15,188 orders concentrate heavily at dinner, and the unassisted drive time baseline of 8.26 minutes per order sets the physical scale against which every strategy result below should be read.
+# RQ5: Assignment Strategy
 
-## RQ5 and RQ8: assignment strategy and fleet size
+<!-- section content: Tianyu -->
 
-![Delivery performance against fleet size for both strategies.](outputs/12_fleet_size_sweep.png){#fig-sweep width=95%}
+# RQ6: Peak Load
 
-As we can see from the plot above, both strategies trace the same capacity curve, collapsing at 100 to 200 couriers and flattening against a physical floor of about 20.5 minutes beyond 500. The smallest fleet meeting a 45 minute p95 standard is 500 under either strategy, which is the practical answer to RQ8, and pushing to 800 buys under a minute while dropping utilization from 36 to 27 percent. The strategy comparison answers RQ5 conditionally. System-wide Batching outperforms greedy dispatch by about 2 percent in mean delivery time under scarcity, for example 135 against 138 minutes at fleet 200, because coordinated matching cuts wasted pickup travel when couriers are the binding resource. The margin is smaller than exact matching would deliver, which suggests part of the batching advantage lives in the optimality of the matching rather than in the batching alone. At abundance the ranking flips by roughly one dispatch window of latency. Which method is fastest therefore depends on the operating regime, and under the regimes that matter, scarcity and peaks, batching wins.
+<!-- section content: Tianyu -->
 
-## RQ6: peak load
+# RQ7: Robustness to Road Closures
 
-![Hourly mean click-to-door time under the lunch and dinner peaks.](outputs/13_peak_load_performance.png){#fig-peak width=95%}
+<!-- section content: Tianyu -->
 
-As we can see from the plot above, peak performance is not a scaled version of off peak performance but a queueing regime change. At fleet 200 the lunch rush pushes hourly means past two hours and the dinner rush far higher, with each backlog taking hours to drain. At fleet 500 the identical demand passes through with a ripple, a 19:00 mean near 24 minutes against 21 off peak. The dinner peak binds first, so fleet and strategy decisions should be evaluated at 19:00 rather than on daily averages.
+# RQ8: Fleet Size
 
-## RQ2: the demand ceiling
-
-The ceiling is an instantaneous rate constraint rather than a volume constraint. An uncongested courier completes about 2.9 orders per hour given the 20.5 minute busy cycle, so holding the 2,279 order 19:00 peak without queue growth would require roughly 780 couriers. The 500 courier fleet that satisfies the daily service standard caps out near 1,461 orders per hour and survives the rush only because the peak is brief enough for its transient backlog to drain afterward. Daily volume is comfortably within capacity, since that same fleet could move about 35,000 orders in a flat day. The answer to RQ2 is that the network and fleet jointly impose a ceiling near 1,500 orders per hour at fleet 500, and it binds at dinner.
+<!-- section content: Tianyu -->
 
 # Conclusion
 
-The structural and operational findings are two views of one mechanism. The street network funnels shortest paths through a handful of crossings, concentrates restaurants in corridors that happen to sit at the point of best reach, and offers enough grid redundancy that only targeted disruption hurts. Those same properties reappear operationally as a hard physical floor of about 20.5 minutes per delivery, a fleet requirement near 500 couriers for acceptable daily service, and a dinner hour rate ceiling that no assignment cleverness can lift, only more couriers or a faster network. Assignment policy matters exactly where the structure leaves room, under scarcity, where windowed system-wide matching recovers about 2 percent of delivery time that greedy dispatch wastes.
-
-Four limitations qualify these results. Travel times are free flow values built largely from imputed speeds, so congestion, which would deepen the peaks and sharpen the bottlenecks, is absent. Demand is a population density proxy rather than observed orders. The batched strategy uses a greedy cheapest pair heuristic rather than exact matching, so the measured batching advantage is a lower bound on what coordinated assignment can deliver. And the simulation excludes order bundling and idle repositioning, both of which the literature shows would improve the batching strategy further [@liang2024, @cheng2025]. Each limitation points the same direction, toward time varying travel times and richer courier behavior on the substrate assembled here, which we leave as the natural next stage of this work.
+<!-- section content: Tianyu -->
