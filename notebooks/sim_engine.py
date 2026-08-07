@@ -10,7 +10,7 @@ MAX_WAITING_POOL = 400
 DAY_S = 86400.0
 
 
-# greedy cheapest pair matching, a computationally light heuristic in place of exact assignment
+# greedy cheapest pair matching
 def _greedy_match(cost):
     n_c, n_o = cost.shape
     flat_order = np.argsort(cost, axis=None)
