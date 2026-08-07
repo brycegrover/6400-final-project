@@ -33,6 +33,11 @@ execute:
   eval: false
 ---
 
+# Introduction 
+
+
+
+
 # Data
 
 The drivable street network for Washington, DC was downloaded from OpenStreetMap with OSMnx. Cleaning kept the largest strongly connected component, which leaves 10,027 intersections and 26,938 directed edges (1,928 km of streets) and means every location can reach every other along legal driving directions. Only about a third of edges have an explicit speed tag, so missing speeds were filled in with the mean tagged speed of the same road type, and every edge got a free flow travel time weight. These free flow times ignore congestion, which is a limitation that carries into every result below.
