@@ -67,11 +67,11 @@ probabilities are proportional to node level population density.
 
 ### Courier simulation
 
-A discrete event simulation processes the day on precomputed all pairs shortest path
-matrices. Nearest Available Courier dispatches greedily at order arrival. System-wide
-Batching solves an exact minimum cost matching between the full fleet and waiting
-orders every 120 seconds. Fleet sizes from 100 to 800 couriers are swept in parallel
-worker processes.
+A discrete event simulation processes the day on a precomputed all pairs shortest
+path travel time matrix. Nearest Available Courier dispatches greedily at order
+arrival. System-wide Batching matches the full fleet to waiting orders every 120
+seconds with a greedy cheapest pair heuristic. Five fleet sizes between 100 and 800
+couriers are swept in parallel worker processes.
 
 ## Repository Structure
 
@@ -103,12 +103,12 @@ quarto render paper.qmd --to pdf
 ## Key Findings
 
 Betweenness centrality finds chokepoints that simple metrics miss, led by the
-Southeast Freeway and the 3rd Street Tunnel, with only 13 percent overlap between
+Southeast Freeway and the 3rd Street Tunnel, with only 8 percent overlap between
 the top edges by observed volume and by betweenness. Restaurants cluster strongly
 (Clark-Evans R of 0.32) and clustered restaurants reach demand about 16 percent
 faster than isolated ones. The grid is robust to random closures but roughly forty
 times more sensitive to targeted ones. Operationally, a fleet near 500 couriers
 meets a 45 minute p95 standard against a 20.5 minute physical floor, system-wide
-batching beats greedy dispatch by 5 to 7 percent under courier scarcity, and
+batching beats greedy dispatch by about 2 percent under courier scarcity, and
 capacity binds at the dinner peak near 1,500 orders per hour rather than at daily
 volume. Full results are in the paper.

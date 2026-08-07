@@ -4,6 +4,8 @@ author:
   - name: Bryce Grover
   - name: Tianyu Zhao
 date: "2026-08-05"
+abstract: |
+  Food delivery in a city depends on the road network underneath it. We study Washington, DC using the OpenStreetMap drivable network, 2,043 restaurant locations, census tract population as a demand proxy, observed 2024 traffic counts, and a simulated day of 15,188 orders. Travel time weighted betweenness finds a short list of chokepoints led by the 3rd Street Tunnel and the Southeast Freeway, and simple metrics like observed volume or speed miss most of them. Restaurants cluster strongly (Clark-Evans R of 0.32) and clustered restaurants reach demand about 16 percent faster than isolated ones. Upgrading the most central slow streets helps, but only at corridor scale. The demand ceiling is a limit on orders per hour rather than on daily volume, near 1,500 orders per hour for a 500 courier fleet, and it binds at dinner.
 format:
   pdf:
     documentclass: article
