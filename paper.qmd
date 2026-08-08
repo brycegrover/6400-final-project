@@ -86,7 +86,7 @@ As we can see from the plot above, the restaurant supply is far from uniform. Fu
 
 As we can see from the plot above, the supply and the demand proxy do not live in the same places. The ten most restaurant dense tracts hold 37.2 percent of all restaurants but only 4.1 percent of the population, and the tract level correlation between population and restaurant count is basically zero at -0.09. Delivery in DC is therefore a transport problem at its core, because the food is made downtown and in the northwest corridors while much of the demand lives elsewhere.
 
-![Free flow drive time from the restaurant core.](outputs/07_courier_reach.png){#fig-reach width=60%}
+![Free flow drive time from the restaurant core.](outputs/07_courier_reach.png){#fig-reach width=70%}
 
 As we can see from the plot above, free flow reach from the 14th Street core is generous. About 23 percent of intersections are reachable within five minutes, 68 percent within ten, and nearly the whole District within fifteen. The catch is that these are free flow times built from imputed speeds, so real congestion and service overheads will shrink this picture. The gradient also runs against the demand map, since the areas beyond the ten minute band are exactly the population dense areas east of the river.
 
@@ -135,6 +135,12 @@ First, we calculated the baseline route for each order using Dijkstra's shortest
 After each closure, we rerouted all orders. Also, we measured the additional travel time for reachable orders and the number of orders that lost a route. Lastly, we compared the NAC and SWB strategies under fleets of 200 and 500 couriers.
 
 ## RQ8: Fleet Size
+
+To determine the ideal number of couriers, we used the fleet-sweep simulation results. The tested fleet sizes were 100, 150, 200, 300, 400, 500, 600, and 800 couriers. Also, each fleet size was tested under the two delivery strategies.
+
+For each setting, we first measured the average delivery time, then calculated the percentage delivered within 45 minutes, performance during the 7:00 PM peak, and courier utilization. Also, we defined the ideal fleet as the smallest tested fleet that meets two conditions. First, both strategies must deliver at least 99.5% of orders within 45 minutes. Second, the next tested fleet must save less than one additional minute on average.
+
+Since the gaps between fleet sizes are different, we also calculated the number of minutes saved per 100 additional couriers. This allowed us to measure when adding more couriers stopped providing a large improvement.
 
 # Results
 
@@ -221,5 +227,26 @@ As we can see from the @fig-closure-strategy, it shows the percentage increase i
 To sum up, targeted closures cause much more damage than random closures. However, the assignment strategy does not protect the pickup-to-door route from a closure. This experiment only measures the route from the restaurant to the customer because courier locations before pickup were not available.
 
 ## RQ8: Fleet Size
+
+![Average delivery time and percentage of orders.](outputs/19_fleet_delivery_performance.png){#fig-fleet-performance width=85%}
+
+As we can see from @fig-fleet-performance, it shows that the delivery performance improves quickly as fleet size increases. Also, we see that with 100 couriers, average delivery time is 576 minutes, and only 11.75% of orders are delivered within 45 minutes. At 400 couriers, average delivery time falls to 29.81 minutes, but the on-time rate is still only 81.50%. At 500 couriers, average delivery time falls to 21.90 minutes, and both strategies deliver 100% of orders within 45 minutes.
+
+@tbl-ideal-fleet shows the performance of each strategy at 500 couriers.
+
+| Strategy | Mean time (min) | P95 time (min) | Within 45 min (%) | 7 PM mean (min) | Utilization (%) |
+|:---------|----------------:|---------------:|------------------:|----------------:|----------------:|
+| NAC      | 21.59           | 30.43          | 100.00            | 23.85           | 36.30           |
+| SWB      | 22.21           | 31.13          | 100.00            | 24.81           | 32.30           |
+
+: Delivery performance at the ideal fleet size of 500 couriers. {#tbl-ideal-fleet}
+
+NAC is slightly faster than SWB at this fleet size. However, both strategies provide reliable performance throughout the day and during the 7:00 PM demand peak.
+
+![Average minutes saved per 100 additional couriers.](outputs/20_fleet_marginal_benefit.png){#fig-fleet-benefit width=85%}
+
+As we can see from @fig-fleet-benefit, it shows that adding more couriers provides very little improvement after 500. Also, increasing the fleet from 400 to 500 saves 7.91 minutes. However, increasing it from 500 to 600 saves only 0.91 minutes. Increasing it from 600 to 800 saves only another 0.19 minutes. Average utilization also falls from 34.30% at 500 couriers to 23.75% at 800 couriers.
+
+To sum up, the ideal tested fleet size is 500 couriers. It delivers every order within 45 minutes under both strategies, while adding more couriers provides very little improvement. However, this is only a performance-based result because courier wages and other operating costs were not included.
 
 # Conclusion
