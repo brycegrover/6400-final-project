@@ -110,6 +110,12 @@ The clustering question has two halves. The first asks whether DC restaurants cl
 
 ## RQ5: Best Strategy
 
+To address which courier assignment strategy gives the fastest average delivery time, we compared the Nearest Available Courier (NAC) and Shortest Workload-Based (SWB) strategies. The main measurement was click-to-door time. It measures the total number of minutes from when an order is placed until it is delivered.
+
+The delivery-event dataset contains 60,752 rows. Each strategy and fleet-size setting contains the same 15,188 orders. Since delivery time is strongly affected by the number of available couriers, we compared the strategies separately for fleets of 200 and 500 couriers.
+
+For each setting, we calculated the mean, median, standard deviation, and 95% confidence interval of the delivery time. We also applied a paired t-test, since the same orders were tested under both strategies. Therefore, these methods allowed us to determine whether the difference between NAC and SWB was statistically significant.
+
 ## RQ6: Peak Load
 
 ## RQ7: Robustness
@@ -143,3 +149,19 @@ As we can see from the plot above, the targeted upgrade lands on Florida Avenue 
 ![Restaurant clustering against a uniform random baseline.](outputs/04_restaurant_clustering.png){#fig-clustering width=85%}
 
 As we can see from the plot above, the observed nearest neighbor distances sit far to the left of the random baseline. The mean observed spacing is 47 m against an expected 147 m under complete spatial randomness, a Clark-Evans ratio of 0.32, which matches the clustering behavior found in Milan by @leonardi2023. On the access half, restaurants inside clusters reach the common demand sample in 8.29 minutes on average against 9.88 minutes for isolated restaurants, an advantage of about 16 percent. Clusters sit where the street network is fastest to everywhere else, so on static accessibility clustering helps delivery rather than hurting it. What this comparison cannot capture is congestion inside clusters at peak and the batching effects that @liang2024 show matter most during rushes, so we treat the operational half of RQ4 as open for the assignment analysis.
+
+## RQ5: Best Strategy
+
+![Average delivery time by assignment strategy and fleet size.](outputs/14_average_delivery_time.png){#fig-clustering width=85%}
+
+As we can see from the plot above, the results shows the average delivery time for NAC and SWB under both fleet sizes. With 200 couriers, SWB had an average delivery time of 129.01 minutes, while NAC had an average of 137.96 minutes. Therefore, SWB was 8.95 minutes faster, which is a 6.49% reduction in delivery time. However, the result changed when 500 couriers were available. NAC had an average delivery time of 21.59 minutes, while SWB had an average of 22.21 minutes. In this setting, NAC was about 0.62 minutes faster. The paired t-test showed a p-value less than 0.001, which means that the differences were statistically significant for both fleet sizes.
+
+![Overall Average.](outputs/15_overall_average.png){#fig-clustering width=85%}
+
+Moreover, as we can see from the table above, when both fleet sizes were combined, SWB had the fastest overall average delivery time. Its average was 75.61 minutes, compared with 79.78 minutes for NAC. Based on these results, we see that the best strategy depends on fleet size. SWB works better when the number of couriers is limited, while NAC is slightly faster when 500 couriers are available.
+
+## RQ6: Peak Load
+
+## RQ7: Robustness
+
+## RQ8: Fleet Size
