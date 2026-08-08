@@ -70,11 +70,11 @@ Demand itself is simulated on top of this data. A synthetic day of 15,188 orders
 
 The cleaned network behaves like the planned grid that it is. Intersections average 3.29 streets per node and an average degree of 5.37, total street length is 1,928 km, and self loops are very rare, so the graph looks like a proper street network rather than a set of odd geometries.
 
-![Intersection connectivity across the network.](outputs/02_street_counts.png){#fig-streetcounts width=80%}
+![Intersection connectivity across the network.](outputs/02_street_counts.png){#fig-streetcounts width=60%}
 
 As we can see from the plot above, most intersections connect three or four streets and dead ends are fairly rare, which reflects the L'Enfant grid. This is a helpful layout for routing, because a courier blocked on one segment usually has a parallel street right next to it. The structural analysis asks where that backup runs out.
 
-![The network colored by assigned edge speed.](outputs/01_network_speeds.png){#fig-speeds width=85%}
+![The network colored by assigned edge speed.](outputs/01_network_speeds.png){#fig-speeds width=60%}
 
 As we can see from the plot above, the speed structure follows the road hierarchy we would expect. The interstate segments in the southeast and the parkway corridors along the rivers carry the highest speeds, the diagonal avenues sit in the middle, and the large residential fabric fills in around 35 kph. Deliveries are won or lost on how quickly couriers can move between these slow local streets and the faster main roads.
 
@@ -82,11 +82,11 @@ As we can see from the plot above, the speed structure follows the road hierarch
 
 As we can see from the plot above, the restaurant supply is far from uniform. Full service restaurants dominate the count, and the density panel shows sharp concentrations downtown and along the 14th Street, U Street, H Street, and Georgetown corridors. Large areas east of the Anacostia River and in the residential northeast have only scattered supply.
 
-![Demand proxy (population density) against restaurant supply.](outputs/05_demand_heatmap.png){#fig-demand width=85%}
+![Demand proxy (population density) against restaurant supply.](outputs/05_demand_heatmap.png){#fig-demand width=95%}
 
 As we can see from the plot above, the supply and the demand proxy do not live in the same places. The ten most restaurant dense tracts hold 37.2 percent of all restaurants but only 4.1 percent of the population, and the tract level correlation between population and restaurant count is basically zero at -0.09. Delivery in DC is therefore a transport problem at its core, because the food is made downtown and in the northwest corridors while much of the demand lives elsewhere.
 
-![Free flow drive time from the restaurant core.](outputs/07_courier_reach.png){#fig-reach width=85%}
+![Free flow drive time from the restaurant core.](outputs/07_courier_reach.png){#fig-reach width=60%}
 
 As we can see from the plot above, free flow reach from the 14th Street core is generous. About 23 percent of intersections are reachable within five minutes, 68 percent within ten, and nearly the whole District within fifteen. The catch is that these are free flow times built from imputed speeds, so real congestion and service overheads will shrink this picture. The gradient also runs against the demand map, since the areas beyond the ten minute band are exactly the population dense areas east of the river.
 
@@ -117,6 +117,14 @@ The delivery-event dataset contains 60,752 rows. Each strategy and fleet-size se
 For each setting, we calculated the mean, median, standard deviation, and 95% confidence interval of the delivery time. We also applied a paired t-test, since the same orders were tested under both strategies. Therefore, these methods allowed us to determine whether the difference between NAC and SWB was statistically significant.
 
 ## RQ6: Peak Load
+
+To address how deliveries change during high-demand periods, we used the simulated order data and delivery-event data. The order data contains 15,188 orders; we applied this data to identify changes in hourly demand. The delivery-event data contains 60,752 rows and was used to measure delivery performance.
+
+First, we counted the number of orders placed during each hour. Then, we defined lunch as 11:00 AM to 1:59 PM and dinner as 6:00 PM to 8:59 PM. Based on the hourly results, the overnight and morning period from 12:00 AM to 10:59 AM was used as the low-demand baseline.
+
+Then, we calculated the average, median, and 95th percentile delivery time for each period. We also measured the percentage of orders delivered within 45 minutes. Since fleet size and assignment strategy may affect the results, we compared the Nearest Available Courier (NAC) and Shortest Workload-Based (SWB) strategies separately for fleets of 200 and 500 couriers.
+
+Moreover, we separated the total delivery time into pre-pickup time and pickup-to-door time. This allowed us to determine whether the delays came from orders waiting for a courier or from the final trip to the customer. We also examined the hours after each demand peak to see whether the order backlog continued after demand decreased.
 
 ## RQ7: Robustness
 
@@ -152,7 +160,7 @@ As we can see from the plot above, the observed nearest neighbor distances sit f
 
 ## RQ5: Best Strategy
 
-![Average delivery time by assignment strategy and fleet size.](outputs/14_average_delivery_time.png){#fig-clustering width=85%}
+![Average delivery time by assignment strategy and fleet size.](outputs/14_average_delivery_time.png){#fig-strategy width=85%}
 
 As we can see from the plot above, the results shows the average delivery time for NAC and SWB under both fleet sizes. With 200 couriers, SWB had an average delivery time of 129.01 minutes, while NAC had an average of 137.96 minutes. Therefore, SWB was 8.95 minutes faster, which is a 6.49% reduction in delivery time. However, the result changed when 500 couriers were available. NAC had an average delivery time of 21.59 minutes, while SWB had an average of 22.21 minutes. In this setting, NAC was about 0.62 minutes faster. The paired t-test showed a p-value less than 0.001, which means that the differences were statistically significant for both fleet sizes.
 
@@ -162,6 +170,31 @@ Moreover, as we can see from the table above, when both fleet sizes were combine
 
 ## RQ6: Peak Load
 
+![Hourly order demand during the simulated day.](outputs/15_hourly_order_demand.png){#fig-hourly-demand width=85%}
+
+As we can see from the above, @fig-hourly-demand shows two clear high-demand periods during the simulated day. Lunch contains 4,810 orders and averages 1,603 orders per hour. Dinner contains 6,341 orders and averages 2,114 orders per hour. Together, these periods contain 73.42% of all orders, even though they only cover six hours. Dinner demand is about 31.84% higher than lunch demand.
+
+![Average hourly delivery time.](outputs/16_hourly_delivery_time.png){#fig-hourly-delivery width=85%}
+
+Also, as we can see from the above, @fig-hourly-delivery shows how the change in demand affects delivery time under each fleet size and assignment strategy. We see that the fleet of 200 couriers cannot clear orders as quickly as they arrive. Delivery time begins to increase during lunch and continues after the lunch peak ends. It increases again during dinner and reaches its highest level after the dinner peak.
+
+However, the fleet of 500 couriers remains close to its normal performance. Delivery time increases slightly during lunch and dinner, but it returns to around 20 minutes after each peak.
+
+@tbl-period-delivery shows the exact average delivery time for each setting.
+
+| Fleet size | Strategy | Baseline (min) | Lunch (min) | Dinner (min) | Late evening (min) |
+|------------:|:--------:|---------------:|------------:|-------------:|-------------------:|
+| 200         | NAC      | 20.36          | 98.39       | 185.33       | 274.21             |
+| 200         | SWB      | 20.36          | 95.02       | 171.22       | 253.94             |
+| 500         | NAC      | 20.24          | 20.93       | 22.95        | 20.02              |
+| 500         | SWB      | 20.24          | 21.41       | 24.06        | 19.97              |
+
+: Average click-to-door delivery time by period. {#tbl-period-delivery}
+
+With 200 couriers, average delivery time increases from about 20 minutes to 95–98 minutes at lunch and 171–185 minutes at dinner. SWB performs better, but the backlog continues after dinner. With 500 couriers, delivery time stays between 21 and 24 minutes. Since pickup-to-door time remains near 10 minutes, most delays occur before pickup. Therefore, high demand mainly causes delays when there are not enough couriers.
+
 ## RQ7: Robustness
 
 ## RQ8: Fleet Size
+
+# Conclusion
