@@ -176,9 +176,16 @@ As we can see from the plot above, the observed nearest neighbor distances sit f
 
 As we can see from the plot above, the results shows the average delivery time for NAC and SWB under both fleet sizes. With 200 couriers, SWB had an average delivery time of 129.01 minutes, while NAC had an average of 137.96 minutes. Therefore, SWB was 8.95 minutes faster, which is a 6.49% reduction in delivery time. However, the result changed when 500 couriers were available. NAC had an average delivery time of 21.59 minutes, while SWB had an average of 22.21 minutes. In this setting, NAC was about 0.62 minutes faster. The paired t-test showed a p-value less than 0.001, which means that the differences were statistically significant for both fleet sizes.
 
-![Overall Average.](outputs/15_overall_average.png){#fig-clustering width=85%}
+@tbl-overall-strategy shows the overall delivery performance when both fleet sizes are combined.
 
-Moreover, as we can see from the table above, when both fleet sizes were combined, SWB had the fastest overall average delivery time. Its average was 75.61 minutes, compared with 79.78 minutes for NAC. Based on these results, we see that the best strategy depends on fleet size. SWB works better when the number of couriers is limited, while NAC is slightly faster when 500 couriers are available.
+| Strategy | Orders | Mean (min) | Median (min) | Standard deviation (min) |
+|:---------|-------:|-----------:|-------------:|-------------------------:|
+| SWB      | 30,376 | 75.61      | 28.29        | 78.50                    |
+| NAC      | 30,376 | 79.78      | 27.56        | 84.84                    |
+
+: Overall delivery time by assignment strategy. {#tbl-overall-strategy}
+
+Moreover, as we can see from @tbl-overall-strategy, when both fleet sizes were combined, SWB had the fastest overall average delivery time. Its average was 75.61 minutes, compared with 79.78 minutes for NAC. Based on these results, we see that the best strategy depends on fleet size. SWB works better when the number of couriers is limited, while NAC is slightly faster when 500 couriers are available.
 
 ## RQ6: Peak Load
 
