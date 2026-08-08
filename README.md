@@ -78,43 +78,22 @@ Important bottlenecks included the 3rd Street Tunnel, Southeast Freeway, and Flo
 ## Repository Structure
 
 ```text
+data/                                         Raw and cleaned project data
 notebooks/
-  01_fetch_data.ipynb           Download OpenStreetMap and Open Data DC data
-  02_clean_data.ipynb           Clean the network and assign missing speeds
-  03_eda.ipynb                  Explore the network, restaurants, and demand
-  04_network_analysis.ipynb     Analyze bottlenecks, clustering, and upgrades
-  05_simulation_setup.ipynb     Generate orders and shortest-path inputs
-  06_courier_simulation.ipynb   Run assignment and fleet-size simulations
-  sim_engine.py                 Discrete-event simulation engine
-outputs/                        Paper figures and analysis outputs
-paper.qmd                       Quarto research paper
-references.bib                  Bibliography
+  01_fetch_data.ipynb                         Download OpenStreetMap and Open Data DC data
+  02_clean_data.ipynb                         Clean the network and assign missing speeds
+  03_eda.ipynb                                Explore the network, restaurants, and demand
+  04_network_analysis.ipynb                   Analyze bottlenecks, clustering, and upgrades
+  05_simulation_setup.ipynb                   Generate orders and shortest-path inputs
+  06_courier_simulation.ipynb                 Run courier assignment simulations
+  07_Fastest_Strategy.ipynb                   Compare NAC and SWB delivery times
+  08_High_Demand_Delivery_Performance.ipynb   Analyze lunch and dinner delivery performance
+  09_Targeted_vs_Random_Road_Closures.ipynb   Compare targeted and random road closures
+  10_Ideal_Number_of_Couriers.ipynb           Identify the ideal fleet size
+  sim_engine.py                               Discrete-event simulation engine
+outputs/                                      Paper figures and analysis outputs
+README.md                                     Project overview and instructions
+references.bib                                Bibliography
+paper.qmd                                     Quarto research paper
+paper.pdf                                     PDF version of the paper
 ```
-
-## Reproducing the Results
-
-Use Python 3.10 or later with the following main packages:
-
-```text
-osmnx
-geopandas
-networkx
-numpy
-scipy
-pandas
-matplotlib
-altair
-```
-
-Run notebooks `01` through `06` in order. Each notebook uses files created by the previous steps.
-
-Render the paper with Quarto:
-
-```bash
-quarto render paper.qmd --to pdf
-```
-
-## Limitations
-
-The results come from a simulated delivery system in one city. Population density is used as a demand proxy, road travel times do not include real congestion, and missing road speeds are imputed. The closure experiment measures only restaurant-to-customer routes. The ideal fleet size also excludes courier wages, fuel costs, and other operating costs, so 500 couriers is a performance-based result rather than a financial optimum.
-
