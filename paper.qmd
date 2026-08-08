@@ -35,7 +35,27 @@ execute:
 
 # Introduction 
 
+Nowadays, food delivery has become common in most cities. However, customers usually only see the final delivery time. The process behind each order is much more complex. The platform needs to assign a courier, select a route, and deliver the order under changing traffic and demand conditions.
 
+Previous studies mainly focus on courier assignment and route optimization. However, they pay less attention to how the road network itself affects delivery performance. Even with a good assignment strategy, important roads or intersections may still become bottlenecks. Road closures and high demand can also cause longer delivery times. Based on this, our project studies both the road network and courier assignment strategies.
+
+To start the analysis, we use the Washington, DC road network from OpenStreetMap. We also use restaurant locations, population data, 2024 traffic counts, and a simulated day containing 15,188 orders. Also, the population density is used to represent customer demand. The simulated orders include lunch and dinner peaks, which allows us to test the delivery system under different demand levels.
+
+Our analysis contains two main parts. First, we examine the structure of the road network. By applying bottleneck detection, estimating the demand ceiling, testing renovation targets, and measuring the clustering effect, we came up with 4 structural questions:
+
+1. *RQ1.* Do simple metrics find the choke points, or is a more robust method needed?
+2. *RQ2.* Is there a volume the network simply can't move fast enough to meet?
+3. *RQ3.* Which roads give the most improvement if upgraded?
+4. *RQ4.* Do restaurant clusters help or hurt delivery?
+
+Then, we examine delivery operations by comparing two courier assignment strategies. We also test their performance during peak hours, under road closures, and with different fleet sizes, and then came up with 4 operational questions:
+
+5. *RQ5.* Which assignment method gives the fastest average delivery time?
+6. *RQ6.* How does performance shift during lunch and dinner rushes?
+7. *RQ7.* How much worse is a targeted road closure than a random one, and does strategy matter?
+8. *RQ8.* What's the ideal number of couriers for the network?
+
+To sum up, this project studies how road structure and courier assignment work together in an urban food delivery system. Based on the results, we can better understand what causes delivery delays, which roads are the most important, and how many couriers are needed for reliable delivery performance.
 
 
 # Data
@@ -70,7 +90,23 @@ As we can see from the plot above, the supply and the demand proxy do not live i
 
 As we can see from the plot above, free flow reach from the 14th Street core is generous. About 23 percent of intersections are reachable within five minutes, 68 percent within ten, and nearly the whole District within fifteen. The catch is that these are free flow times built from imputed speeds, so real congestion and service overheads will shrink this picture. The gradient also runs against the demand map, since the areas beyond the ten minute band are exactly the population dense areas east of the river.
 
-# RQ1: Bottleneck Detection
+# Methodology
+
+## RQ1: Bottleneck Detection
+
+The bottleneck question asks whether simple metrics find the choke points or whether a more robust method is needed. We compute travel time weighted edge betweenness centrality, approximated over 150 sampled sources, which estimates the share of shortest paths that cross each edge. @joshi2022 use the same idea when they precompute shortest path structure for assignment in dynamic road networks. We then compare the betweenness ranking against observed AADT and against edge speed, the two simple options someone would try first, using Spearman rank correlation and the overlap between the top one percent sets.
+
+## RQ2: Demand Ceiling
+
+The demand ceiling question asks whether there is an order volume the network simply cannot move fast enough to meet. We answer it with throughput arithmetic on the simulation setup. The mean busy cycle per delivery, measured in uncongested reference runs, converts into how many orders one courier can complete per hour. Comparing that capacity against the arrival profile of the synthetic day shows the rate at which a given fleet gets overwhelmed.
+
+## RQ3: Renovation Targets
+
+The renovation question asks which roads give the most improvement if upgraded. We run a simple counterfactual on a common origin destination sample of 320 restaurant to demand pairs. The highest betweenness surface edges with speeds below 40 kph, seven edges under the current threshold, are raised to a 48 kph arterial standard, travel times are recomputed, and the change in mean OD travel time is measured. Three upgrades of the same number of random slow edges serve as the control.
+
+## RQ4: Restaurant Clustering
+
+The clustering question has two halves. The first asks whether DC restaurants cluster more than chance would produce, which we measure with nearest neighbor distances against a uniform random baseline inside the DC boundary, summarized with the Clark-Evans ratio. The second asks whether being inside a cluster helps or hurts access to demand. We compare restaurants with at least ten neighbors within 250 m against effectively isolated restaurants, measuring mean network travel time from each group to the same population weighted demand sample.
 
 ## Methodology
 
