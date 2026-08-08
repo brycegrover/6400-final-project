@@ -108,11 +108,17 @@ The renovation question asks which roads give the most improvement if upgraded. 
 
 The clustering question has two halves. The first asks whether DC restaurants cluster more than chance would produce, which we measure with nearest neighbor distances against a uniform random baseline inside the DC boundary, summarized with the Clark-Evans ratio. The second asks whether being inside a cluster helps or hurts access to demand. We compare restaurants with at least ten neighbors within 250 m against effectively isolated restaurants, measuring mean network travel time from each group to the same population weighted demand sample.
 
-## Methodology
+## RQ5: Best Strategy
 
-The bottleneck question asks whether simple metrics find the choke points or whether a more robust method is needed. We compute travel time weighted edge betweenness centrality, approximated over 150 sampled sources, which estimates the share of shortest paths that cross each edge. @joshi2022 use the same idea when they precompute shortest path structure for assignment in dynamic road networks. We then compare the betweenness ranking against observed AADT and against edge speed, the two simple options someone would try first, using Spearman rank correlation and the overlap between the top one percent sets.
+## RQ6: Peak Load
 
-## Results
+## RQ7: Robustness
+
+## RQ8: Fleet Size
+
+# Results
+
+## RQ1: Bottleneck Detection
 
 ![Observed 2024 traffic volume (AADT) on the DC network.](outputs/06_traffic_aadt.png){#fig-aadt width=85%}
 
@@ -122,35 +128,17 @@ As we can see from the plot above, observed traffic volume concentrates on the f
 
 As we can see from the plot above, the betweenness ranking concentrates on a short list of crossings led by the 3rd Street Tunnel and the Southeast Freeway, with Florida Avenue the leading surface street. These are the true chokepoints in the sense that shortest paths have no good way around them. The answer to RQ1 is that simple metrics are useful backup evidence but would miss most of the chokepoints, so the path based measure is needed.
 
-# RQ2: Demand Ceiling
-
-## Methodology
-
-The demand ceiling question asks whether there is an order volume the network simply cannot move fast enough to meet. We answer it with throughput arithmetic on the simulation setup. The mean busy cycle per delivery, measured in uncongested reference runs, converts into how many orders one courier can complete per hour. Comparing that capacity against the arrival profile of the synthetic day shows the rate at which a given fleet gets overwhelmed.
-
-## Results
+## RQ2: Demand Ceiling
 
 An uncongested courier completes about 2.9 orders per hour given the 20.5 minute busy cycle, so holding the 2,279 order 19:00 peak without a growing queue would take roughly 780 couriers. A 500 courier fleet, the size that meets the daily service standard in the operational analysis, caps out near 1,461 orders per hour. It survives the rush only because the peak is short enough for the backlog to drain afterward. Daily volume is not the problem, since that same fleet could move about 35,000 orders in a flat day. The answer to RQ2 is that the ceiling is a limit on orders per hour rather than on total daily orders, near 1,500 per hour at fleet 500, and it binds at dinner.
 
-# RQ3: Renovation Targets
-
-## Methodology
-
-The renovation question asks which roads give the most improvement if upgraded. We run a simple counterfactual on a common origin destination sample of 320 restaurant to demand pairs. The highest betweenness surface edges with speeds below 40 kph, seven edges under the current threshold, are raised to a 48 kph arterial standard, travel times are recomputed, and the change in mean OD travel time is measured. Three upgrades of the same number of random slow edges serve as the control.
-
-## Results
+## RQ3: Renovation Targets
 
 ![Improvement in mean OD travel time from the targeted upgrade.](outputs/09_renovation_experiment.png){#fig-renovation width=70%}
 
 As we can see from the plot above, the targeted upgrade lands on Florida Avenue NW and New Jersey Avenue NW and improves mean travel time by about 0.09 percent, while an equal sized random upgrade does basically nothing. Targeting by betweenness works, but no handful of edge fixes meaningfully changes citywide delivery times, because the slow part of a delivery is the residential last leg rather than any single arterial segment. Renovation budgets should follow the betweenness ranking with expectations set at corridor scale.
 
-# RQ4: Restaurant Clustering
-
-## Methodology
-
-The clustering question has two halves. The first asks whether DC restaurants cluster more than chance would produce, which we measure with nearest neighbor distances against a uniform random baseline inside the DC boundary, summarized with the Clark-Evans ratio. The second asks whether being inside a cluster helps or hurts access to demand. We compare restaurants with at least ten neighbors within 250 m against effectively isolated restaurants, measuring mean network travel time from each group to the same population weighted demand sample.
-
-## Results
+## RQ4: Restaurant Clustering
 
 ![Restaurant clustering against a uniform random baseline.](outputs/04_restaurant_clustering.png){#fig-clustering width=85%}
 
