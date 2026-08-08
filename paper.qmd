@@ -126,7 +126,13 @@ Then, we calculated the average, median, and 95th percentile delivery time for e
 
 Moreover, we separated the total delivery time into pre-pickup time and pickup-to-door time. This allowed us to determine whether the delays came from orders waiting for a courier or from the final trip to the customer. We also examined the hours after each demand peak to see whether the order backlog continued after demand decreased.
 
-## RQ7: Robustness
+## RQ7: Targeted and Random Road Closures
+
+To address how road closures affect delivery performance, we used the Washington, DC road network and the 15,188 simulated orders. Where the network contains 10,027 nodes, 26,938 directed edges, and 16,267 physical road segments.
+
+First, we calculated the baseline route for each order using Dijkstra's shortest-path algorithm. Then, we closed 1% of the physical road segments, which equals 163 roads. Both directions of each road were removed. For targeted closures, we removed the 163 roads used by the largest number of baseline delivery routes. For random closures, we randomly removed 163 roads and repeated the experiment 30 times. Using the same number of roads makes the comparison fair.
+
+After each closure, we rerouted all orders. Also, we measured the additional travel time for reachable orders and the number of orders that lost a route. Lastly, we compared the NAC and SWB strategies under fleets of 200 and 500 couriers.
 
 ## RQ8: Fleet Size
 
@@ -193,7 +199,26 @@ However, the fleet of 500 couriers remains close to its normal performance. Deli
 
 With 200 couriers, average delivery time increases from about 20 minutes to 95–98 minutes at lunch and 171–185 minutes at dinner. SWB performs better, but the backlog continues after dinner. With 500 couriers, delivery time stays between 21 and 24 minutes. Since pickup-to-door time remains near 10 minutes, most delays occur before pickup. Therefore, high demand mainly causes delays when there are not enough couriers.
 
-## RQ7: Robustness
+## RQ7: Targeted and Random Road Closures
+
+![Added travel time and unreachable orders.](outputs/17_network_closure_damage.png){#fig-closure-damage width=85%}
+
+As we can see from @fig-closure-damage, it compares the overall damage caused by random and targeted closures. Also we see that the targeted closures cause more damage than random closures. As shown in @tbl-closure-damage, targeted closures add 0.49 minutes to reachable orders, while random closures add 0.12 minutes. Targeted closures also make 187 orders unreachable, compared with about 42 orders under random closures.
+
+| Scenario | Roads closed | Reachable orders (%) | Unreachable orders | Mean added time (min) |
+|:---------|-------------:|---------------------:|-------------------:|----------------------:|
+| Random   | 163          | 99.73                | 41.5               | 0.115                 |
+| Targeted | 163          | 98.77                | 187.0              | 0.489                 |
+
+: Network damage under random and targeted road closures. Random results are averaged across 30 trials. {#tbl-closure-damage}
+
+Based on these results, targeted closures create about 4.25 times more delay and 4.5 times more route failures. This shows that closing the most-used roads is much more damaging than closing the same number of random roads.
+
+![Percentage increase in average delivery time.](outputs/18_closure_effect_strategy.png){#fig-closure-strategy width=85%}
+
+As we can see from the @fig-closure-strategy, it shows the percentage increase in delivery time for each assignment strategy and fleet size. The closure effect is almost the same for NAC and SWB. With 200 couriers, targeted closures increase average delivery time by 0.36% under NAC and 0.38% under SWB. With 500 couriers, the increases are 2.26% and 2.20%. The percentages are higher for 500 couriers because their original delivery times are much lower.
+
+To sum up, targeted closures cause much more damage than random closures. However, the assignment strategy does not protect the pickup-to-door route from a closure. This experiment only measures the route from the restaurant to the customer because courier locations before pickup were not available.
 
 ## RQ8: Fleet Size
 
