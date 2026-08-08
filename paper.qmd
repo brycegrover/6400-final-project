@@ -37,7 +37,7 @@ execute:
 
 Nowadays, food delivery has become common in most cities. However, customers usually only see the final delivery time. The process behind each order is much more complex. The platform needs to assign a courier, select a route, and deliver the order under changing traffic and demand conditions.
 
-Previous studies mainly focus on courier assignment and route optimization. However, they pay less attention to how the road network itself affects delivery performance. Even with a good assignment strategy, important roads or intersections may still become bottlenecks. Road closures and high demand can also cause longer delivery times. Based on this, our project studies both the road network and courier assignment strategies.
+Previous studies have also used routing algorithms and reinforcement learning to improve food-delivery assignment [@giraldo2024; @cheng2025]. However, they pay less attention to how the road network itself affects delivery performance. Even with a good assignment strategy, important roads or intersections may still become bottlenecks. Road closures and high demand can also cause longer delivery times. Based on this, our project studies both the road network and courier assignment strategies.
 
 To start the analysis, we use the Washington, DC road network from OpenStreetMap. We also use restaurant locations, population data, 2024 traffic counts, and a simulated day containing 15,188 orders. Also, the population density is used to represent customer demand. The simulated orders include lunch and dinner peaks, which allows us to test the delivery system under different demand levels.
 
@@ -276,8 +276,8 @@ To sum up, for delivery operations, SWB had the fastest overall average delivery
 
 Overall, based on the results,  we conclude that reliable delivery performance depends on both the road network and operational decisions. Delivery platforms need enough couriers to handle peak demand, while city planners should focus on protecting the most important roads.
 
+# AI Usage
+
+ChatGPT was used to help debug code, summarize notebook outputs, organize paper sections, and improve grammar [@openai2026]. The original analysis, code, calculations, figures, and interpretations were completed by the authors. All AI-assisted content was reviewed and verified by the authors.
+
 # References
-
-## AI Usage
-
-ChatGPT was used to help debug code, summarize notebook outputs, organize paper sections, and improve grammar. The original analysis, code, calculations, figures, and interpretations were completed by the authors. All AI-assisted content was reviewed and verified by the authors.
