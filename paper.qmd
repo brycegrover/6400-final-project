@@ -256,4 +256,28 @@ As we can see from @fig-fleet-benefit, it shows that adding more couriers provid
 
 To sum up, the ideal tested fleet size is 500 couriers. It delivers every order within 45 minutes under both strategies, while adding more couriers provides very little improvement. However, this is only a performance-based result because courier wages and other operating costs were not included.
 
+# Limitation
+
+This project has several limitations. First, the results are based on a delivery system in Washington, DC. Therefore, the findings may not fully represent other cities or countries with different delivery systems. Additionally, the population density was used as a proxy for customer demand because real delivery records were not available. Restaurant pickups were also simulated instead of coming from actual order data.
+
+Moreover, the road network uses free-flow travel time and does not include real traffic congestion. Since only about one-third of the roads had speed information, the remaining speeds were estimated by road type. The road-closure experiment only measures the route from the restaurant to the customer because courier locations before pickup were unavailable.
+
+Lastly, we only compared NAC and SWB. Other assignment strategies may produce different results. The ideal fleet of 500 couriers is also based only on delivery performance. Courier wages, fuel costs, and other operating costs were not included. Therefore, 500 couriers should be treated as a performance-based result rather than a financial optimum.
+
 # Conclusion
+
+## Network Structure
+
+To sum up, for the network structure, travel-time weighted betweenness was more useful than traffic volume or speed for finding bottlenecks. Also, we found that the 3rd Street Tunnel, Southeast Freeway, and Florida Avenue are important roads. The demand ceiling for 500 couriers is about 1,461 orders per hour, which is lower than the dinner peak of 2,279 orders. Also, upgrading important roads such as Florida Avenue and New Jersey Avenue performed better than random upgrades, but the improvement was only 0.09%. Lastly, we also found that restaurant clusters helped delivery because clustered restaurants reached demand areas about 16% faster than isolated restaurants.
+
+## Delivery Operations
+
+To sum up, for delivery operations, SWB had the fastest overall average delivery time. However, SWB performed better with 200 couriers, while NAC was slightly faster with 500 couriers. Also, high demand caused serious delays when only 200 couriers were available. Moreover, a fleet of 500 kept average delivery time between 21 and 24 minutes during lunch and dinner. Targeted closures caused about 4.25 times more delay and 4.5 times more route failures than random closures, while NAC and SWB were affected almost equally. Lastly, 500 couriers was the ideal tested fleet size because both strategies delivered every order within 45 minutes, while adding more couriers provided little improvement.
+
+Overall, based on the results,  we conclude that reliable delivery performance depends on both the road network and operational decisions. Delivery platforms need enough couriers to handle peak demand, while city planners should focus on protecting the most important roads.
+
+# References
+
+## AI Usage
+
+ChatGPT was used to help debug code, summarize notebook outputs, organize paper sections, and improve grammar. The original analysis, code, calculations, figures, and interpretations were completed by the authors. All AI-assisted content was reviewed and verified by the authors.
