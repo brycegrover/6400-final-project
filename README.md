@@ -1,114 +1,120 @@
 # Courier Assignment and Bottleneck Detection in Urban Food Delivery
 
-This project studies food delivery in Washington, DC as a network problem. The main
-goal is to measure how the structure of the road network constrains delivery
-operations, first by locating bottlenecks, restaurant clusters, and fragile edges in
-the street graph, and then by running a discrete event courier simulation on top of
-that graph to evaluate assignment strategies, fleet sizes, and peak load behavior.
+This project studies food delivery in Washington, DC from two sides: the structure of the road network and the operational decisions made by a delivery platform. We identify road bottlenecks, estimate delivery capacity, test road upgrades and closures, compare courier assignment strategies, and determine a performance-based fleet size.
 
-Authors: Bryce Grover and Tianyu Zhao. Georgetown University, DSAN network analysis
-course, Summer 2026.
+The analysis uses the Washington, DC OpenStreetMap road network, 2,043 restaurant locations, census tract population, observed 2024 traffic counts, and a simulated day of 15,188 delivery orders.
 
-## Data
-
-All data comes from open sources and is fetched programmatically in the first
-notebook:
-
-- Drivable street network: OpenStreetMap via OSMnx (https://www.openstreetmap.org)
-- Restaurant POIs: OpenStreetMap amenity tags for restaurant, fast food, and cafe
-- Census tract population: ACS 5-Year tract layer from Open Data DC (https://opendata.dc.gov)
-- Traffic volumes: DDOT 2024 AADT segments from Open Data DC
-- Licensing cross-check: ABCA liquor license locations from Open Data DC
-
-The `data/raw` and `data/clean` folders are not included in this repository because
-of course guidance on large files. To reproduce them, run notebooks 01 and 02, which
-download and clean everything from the sources above. Delivery orders are synthetic,
-generated in notebook 05 from restaurant locations and census population density,
-because no public delivery logs exist for DC.
+**Authors:** Bryce Grover and Tianyu Zhao  
+**Course:** Georgetown University, Network Analysis, Summer 2026
 
 ## Research Questions
 
-Structure: where does the network break?
+### Network structure
 
-**RQ1:** Do simple metrics find the choke points, or is a more robust method needed?
+1. Do simple metrics find the choke points, or is a path-based method needed?
+2. Is there an order volume the network cannot move fast enough to meet?
+3. Which roads provide the most improvement if upgraded?
+4. Do restaurant clusters help or hurt delivery?
 
-**RQ2:** Is there an order volume the network simply cannot move fast enough to meet?
+### Delivery operations
 
-**RQ3:** Which roads give the most improvement if upgraded?
+5. Which courier assignment strategy gives the fastest average delivery time?
+6. How does performance change during lunch and dinner peaks?
+7. How much more damage do targeted road closures cause than random closures, and does assignment strategy matter?
+8. What is the ideal number of couriers for the network?
 
-**RQ4:** Do restaurant clusters help or hurt delivery?
+## Data
 
-Operations: who delivers, and how?
+The project combines open geographic data with simulated delivery demand:
 
-**RQ5:** Which assignment method gives the fastest average delivery time?
+- **Road network:** OpenStreetMap, downloaded with OSMnx
+- **Restaurant locations:** OpenStreetMap restaurant, fast-food, and cafe POIs
+- **Population:** ACS five-year census tract data from Open Data DC
+- **Traffic volume:** DDOT 2024 Annual Average Daily Traffic data
+- **Restaurant coverage check:** ABCA liquor-license locations
+- **Delivery demand:** 15,188 synthetic orders with lunch and dinner peaks
 
-**RQ6:** How does performance shift during the lunch and dinner rushes?
+The cleaned road network keeps the largest strongly connected component. It contains 10,027 intersections, 26,938 directed edges, and 1,928 km of streets. Missing speed values are estimated using the mean tagged speed for the same road type.
 
-**RQ7:** How much worse is a targeted road closure than a random one?
-
-**RQ8:** What is the ideal number of couriers for the network?
+The `data/raw` and `data/clean` directories are not included because of their size. Run the data notebooks to download and rebuild them. Delivery orders are simulated because public delivery records are not available for Washington, DC.
 
 ## Methods
 
 ### Network analysis
 
-The cleaned network keeps the largest strongly connected component (10,027 nodes,
-26,938 directed edges) with free flow travel time weights, imputed by highway type
-where speed tags are missing. Bottlenecks are ranked with travel time weighted edge
-betweenness centrality and compared against observed AADT and edge speed. Renovation
-and closure effects are measured with small counterfactual experiments against
-random controls.
+- Rank road bottlenecks with travel-time-weighted edge betweenness centrality.
+- Compare bottlenecks with observed traffic volume and road speed.
+- Estimate hourly delivery capacity from the courier busy cycle.
+- Test targeted road upgrades against random upgrades.
+- Measure restaurant clustering with the Clark-Evans ratio.
+- Compare travel time from clustered and isolated restaurants to the same demand sample.
 
-### Demand simulation
+### Delivery analysis
 
-A synthetic day of 15,188 orders arrives as a nonhomogeneous Poisson process with
-lunch and dinner peak multipliers. Pickups draw from the restaurant POIs and dropoff
-probabilities are proportional to node level population density.
+- Compare Nearest Available Courier (NAC) and System-wide Batching (SWB).
+- Measure click-to-door time under fleets of 200 and 500 couriers.
+- Compare lunch, dinner, and low-demand delivery performance.
+- Close 1% of physical road segments and reroute all orders.
+- Compare targeted closures with 30 random closure trials.
+- Sweep fleet sizes from 100 to 800 couriers.
 
-### Courier simulation
+The ideal fleet is defined as the smallest tested fleet that delivers at least 99.5% of orders within 45 minutes under both strategies and gains less than one additional minute from the next tested fleet size.
 
-A discrete event simulation processes the day on a precomputed all pairs shortest
-path travel time matrix. Nearest Available Courier dispatches greedily at order
-arrival. System-wide Batching matches the full fleet to waiting orders every 120
-seconds with a greedy cheapest pair heuristic. Five fleet sizes between 100 and 800
-couriers are swept in parallel worker processes.
+## Key Findings
+
+| RQ | Main result |
+|:--:|---|
+| 1 | Betweenness found bottlenecks that traffic volume and speed missed. Only 8% of the top 1% AADT and betweenness edges overlapped. |
+| 2 | A 500-courier fleet can process about 1,461 orders per hour, below the dinner peak of 2,279 orders. |
+| 3 | Targeted upgrades improved mean travel time by 0.09%; random upgrades produced almost no change. |
+| 4 | Restaurants were strongly clustered (Clark-Evans R = 0.32), and clustered restaurants reached demand about 16% faster. |
+| 5 | SWB was faster with 200 couriers, while NAC was slightly faster with 500 couriers. |
+| 6 | A 200-courier fleet developed a large backlog during lunch and dinner. A 500-courier fleet kept average delivery time between 21 and 24 minutes. |
+| 7 | Targeted closures caused about 4.25 times more delay and 4.5 times more route failures than random closures. NAC and SWB were affected almost equally. |
+| 8 | The ideal tested fleet was 500 couriers. Both strategies delivered 100% of orders within 45 minutes, while larger fleets provided little improvement. |
+
+Important bottlenecks included the 3rd Street Tunnel, Southeast Freeway, and Florida Avenue. The results show that delivery performance depends on both network structure and operational capacity.
 
 ## Repository Structure
 
-```
+```text
 notebooks/
-  01_fetch_data.ipynb           data ingestion from OSM and Open Data DC
-  02_clean_data.ipynb           network cleaning, speed imputation, POI snapping
-  03_eda.ipynb                  exploratory analysis and figure generation
-  04_network_analysis.ipynb     bottlenecks, clustering, renovation, closures
-  05_simulation_setup.ipynb     order generation and shortest path matrices
-  06_courier_simulation.ipynb   assignment strategies and fleet sweep
-  sim_engine.py                 discrete event simulation engine
-outputs/                        figures 01 to 13 and analysis artifacts
-paper.qmd                       the research paper (Quarto)
-references.bib                  citations
+  01_fetch_data.ipynb           Download OpenStreetMap and Open Data DC data
+  02_clean_data.ipynb           Clean the network and assign missing speeds
+  03_eda.ipynb                  Explore the network, restaurants, and demand
+  04_network_analysis.ipynb     Analyze bottlenecks, clustering, and upgrades
+  05_simulation_setup.ipynb     Generate orders and shortest-path inputs
+  06_courier_simulation.ipynb   Run assignment and fleet-size simulations
+  sim_engine.py                 Discrete-event simulation engine
+outputs/                        Paper figures and analysis outputs
+paper.qmd                       Quarto research paper
+references.bib                  Bibliography
 ```
 
 ## Reproducing the Results
 
-Requires Python 3.10+ with osmnx, geopandas, networkx, scipy, pandas, matplotlib,
-and altair. Run the notebooks in order from 01 to 06. Each executes top to bottom
-and later notebooks read only the files earlier ones produce. Rendering the paper
-requires Quarto:
+Use Python 3.10 or later with the following main packages:
 
+```text
+osmnx
+geopandas
+networkx
+numpy
+scipy
+pandas
+matplotlib
+altair
 ```
+
+Run notebooks `01` through `06` in order. Each notebook uses files created by the previous steps.
+
+Render the paper with Quarto:
+
+```bash
 quarto render paper.qmd --to pdf
 ```
 
-## Key Findings
+## Limitations
 
-Betweenness centrality finds chokepoints that simple metrics miss, led by the
-Southeast Freeway and the 3rd Street Tunnel, with only 8 percent overlap between
-the top edges by observed volume and by betweenness. Restaurants cluster strongly
-(Clark-Evans R of 0.32) and clustered restaurants reach demand about 16 percent
-faster than isolated ones. The grid is robust to random closures but roughly forty
-times more sensitive to targeted ones. Operationally, a fleet near 500 couriers
-meets a 45 minute p95 standard against a 20.5 minute physical floor, system-wide
-batching beats greedy dispatch by about 2 percent under courier scarcity, and
-capacity binds at the dinner peak near 1,500 orders per hour rather than at daily
-volume. Full results are in the paper.
+The results come from a simulated delivery system in one city. Population density is used as a demand proxy, road travel times do not include real congestion, and missing road speeds are imputed. The closure experiment measures only restaurant-to-customer routes. The ideal fleet size also excludes courier wages, fuel costs, and other operating costs, so 500 couriers is a performance-based result rather than a financial optimum.
+
